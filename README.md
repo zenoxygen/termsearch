@@ -1,4 +1,4 @@
-# termsearch 🔍
+# termsearch
 
 [![pipeline](https://github.com/zenoxygen/termsearch/actions/workflows/ci.yaml/badge.svg)](https://github.com/zenoxygen/termsearch/actions/workflows/ci.yaml)
 [![crates.io](https://img.shields.io/crates/v/termsearch.svg)](https://crates.io/crates/termsearch)
@@ -12,7 +12,7 @@ A minimalist and super fast terminal history search tool, that uses a weighted s
 
 ## Usage
 
-1. Initialize
+### Initialize termsearch
 
 ```bash
 termsearch init
@@ -26,7 +26,7 @@ This command does the following:
 
 *Restart the terminal to enable it.*
 
-2. Search for a command
+### Search for a command
 
 ```
 termsearch search
