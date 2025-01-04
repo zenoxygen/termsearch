@@ -1,6 +1,7 @@
 # termsearch 🔍
 
 [![pipeline](https://github.com/zenoxygen/termsearch/actions/workflows/ci.yaml/badge.svg)](https://github.com/zenoxygen/termsearch/actions/workflows/ci.yaml)
+[![crates.io](https://img.shields.io/crates/v/termsearch.svg)](https://crates.io/crates/termsearch)
 
 A minimalist and super fast terminal history search tool, that uses a weighted scoring system to rank commands.
 
@@ -43,6 +44,14 @@ termsearch search
 ```
 
 ## Installation
+
+### From crates.io (recommended)
+
+```bash
+cargo install termsearch
+```
+
+### From source
 
 ```bash
 cargo install --path . --locked
