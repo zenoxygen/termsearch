@@ -1,0 +1,23 @@
+[package]
+name = "termsearch"
+version = "0.1.0"
+authors = ["zenoxygen <zenoxygen@protonmail.com>"]
+edition = "2021"
+
+description = "A minimalist and super fast terminal history search tool."
+homepage = "https://github.com/zenoxygen/termsearch"
+repository = "https://github.com/zenoxygen/termsearch"
+
+keywords = ["terminal", "history", "search"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0.94"
+chrono = "0.4.39"
+clap = { version = "4.5.23", features = ["derive"] }
+crossterm = "0.28.1"
+env_logger = "0.11.5"
+log = "0.4.22"
+regex = { version = "1", default-features = false, features = ["unicode-perl"] }
