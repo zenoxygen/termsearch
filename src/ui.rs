@@ -15,11 +15,11 @@ use crate::search::{get_frequent_commands, search_commands};
 
 /// Actions after handling a key event.
 enum KeyAction {
-    /// Select a command and return it
+    /// Select a command and return it.
     Select(String),
-    /// Continue the event loop
+    /// Continue the event loop.
     Continue,
-    /// Exit the program
+    /// Exit the program.
     Exit,
 }
 
@@ -43,6 +43,12 @@ pub struct TerminalUi {
 
 impl TerminalUi {
     /// Create a new `TerminalUi` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `num_results`: Maximum number of results to display.
+    /// * `history`: Vector of command entries from shell history.
+    ///
     pub fn new(num_results: usize, history: Vec<CommandEntry>) -> Result<Self> {
         debug!("Initialize UI");
 
@@ -63,6 +69,11 @@ impl TerminalUi {
     }
 
     /// Set the initial search results and update the UI.
+    ///
+    /// # Arguments
+    ///
+    /// * `initial_matches`: Vector of initial command entries to display.
+    ///
     pub fn set_initial_results(&mut self, initial_matches: Vec<CommandEntry>) -> Result<()> {
         debug!("Set initial results, count: {}", initial_matches.len());
         self.matches = initial_matches;
@@ -76,11 +87,15 @@ impl TerminalUi {
         terminal::disable_raw_mode().context("Failed to disable raw mode")?;
         execute!(self.stdout, Show, ResetColor, LeaveAlternateScreen)
             .context("Failed to restore terminal state")?;
-
         Ok(())
     }
 
     /// Run the terminal UI and return the selected command if any.
+    ///
+    /// # Arguments
+    ///
+    /// * `initial_term`: Optional initial search term.
+    ///
     pub fn run(&mut self, initial_term: Option<String>) -> Result<Option<String>> {
         debug!("Run UI");
 
@@ -97,10 +112,7 @@ impl TerminalUi {
         loop {
             if let Event::Key(key_event) = event::read()? {
                 if key_event.kind == KeyEventKind::Press {
-                    // Directly handle the key event and get the action
-                    let action = self.handle_key_event(key_event)?;
-
-                    match action {
+                    match self.handle_key_event(key_event)? {
                         KeyAction::Select(command) => return Ok(Some(command)),
                         KeyAction::Continue => {}
                         KeyAction::Exit => {
@@ -110,13 +122,17 @@ impl TerminalUi {
                     }
                 }
             }
-
             // Add a small delay to reduce CPU usage
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
     }
 
     /// Handle a key event and return the appropriate action.
+    ///
+    /// # Arguments
+    ///
+    /// * `key_event`: The key event to handle.
+    ///
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<KeyAction> {
         match key_event.code {
             // Exit handling
@@ -215,25 +231,26 @@ impl TerminalUi {
     /// Draw the input buffer with the current search term.
     fn draw_input_buffer(&mut self) -> Result<()> {
         debug!("Draw input buffer");
-
-        let prompt = format!("> {}", self.input);
         let (width, _) = terminal::size()?;
 
         queue!(
             self.stdout,
             cursor::MoveTo(0, 0),
             terminal::Clear(terminal::ClearType::CurrentLine),
-            Print(format!("{:width$}", prompt, width = width as usize))
+            Print(format!(
+                "{:width$}",
+                format!("> {}", self.input),
+                width = width as usize
+            ))
         )?;
         self.stdout.flush()?;
 
         Ok(())
     }
 
-    /// Draw the matches in the terminal.
+    /// Draw the matches in the terminal with highlighting.
     fn draw_matches(&mut self) -> Result<()> {
         debug!("Draw matches");
-
         let (_, height) = terminal::size()?;
 
         // Clear existing matches
@@ -245,22 +262,54 @@ impl TerminalUi {
             )?;
         }
 
-        // Draw matches
+        // Draw matches with highlighting
         for (i, command_entry) in self.matches.iter().enumerate() {
-            let (fg_color, bg_color) = if i == self.selected_index {
-                (Color::Black, Color::White)
-            } else {
-                (Color::Reset, Color::Reset)
-            };
-
             queue!(
                 self.stdout,
                 cursor::MoveTo(0, (i + 1) as u16),
-                SetForegroundColor(fg_color),
-                SetBackgroundColor(bg_color),
-                Print(&command_entry.command),
-                ResetColor
+                SetForegroundColor(if i == self.selected_index {
+                    Color::Black
+                } else {
+                    Color::Reset
+                }),
+                SetBackgroundColor(if i == self.selected_index {
+                    Color::White
+                } else {
+                    Color::Reset
+                }),
             )?;
+
+            // If there's a search term, highlight matching parts
+            if let Some(term) = &self.term {
+                let command = &command_entry.command;
+                if let Some(match_start) = command.to_lowercase().find(&term.to_lowercase()) {
+                    let match_end = match_start + term.len();
+
+                    // Print before match
+                    queue!(self.stdout, Print(&command[..match_start]))?;
+
+                    // Print match with highlight
+                    queue!(
+                        self.stdout,
+                        SetForegroundColor(Color::Yellow),
+                        Print(&command[match_start..match_end]),
+                        SetForegroundColor(if i == self.selected_index {
+                            Color::Black
+                        } else {
+                            Color::Reset
+                        }),
+                    )?;
+
+                    // Print after match
+                    queue!(self.stdout, Print(&command[match_end..]))?;
+                } else {
+                    queue!(self.stdout, Print(&command_entry.command))?;
+                }
+            } else {
+                queue!(self.stdout, Print(&command_entry.command))?;
+            }
+
+            queue!(self.stdout, ResetColor)?;
         }
 
         // Redraw input buffer
