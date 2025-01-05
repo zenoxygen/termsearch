@@ -118,7 +118,7 @@ fn main() -> Result<()> {
         })
         .unwrap_or(LevelFilter::Info);
 
-    // Initialize the logger with the specified file path and a stdout level of Off
+    // Initialize the logger with the specified file path
     let logger = Logger::new(log_file_path)?;
     log::set_boxed_logger(Box::new(logger)).map(|()| log::set_max_level(file_log_level))?;
 
