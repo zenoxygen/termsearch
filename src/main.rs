@@ -105,7 +105,7 @@ fn main() -> Result<()> {
     let home_dir = std::env::var("HOME").expect("HOME environment variable not set");
 
     // Define the log file path in the user's home directory
-    let log_file_path = PathBuf::from(home_dir).join("termsearch.log");
+    let log_file_path = PathBuf::from(home_dir).join(".termsearch.log");
 
     // Set the log level based on the TERMSEARCH_LOG environment variable (default to INFO)
     let file_log_level = std::env::var("TERMSEARCH_LOG")
