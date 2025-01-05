@@ -14,17 +14,13 @@ A minimalist and super fast terminal history search tool, that uses a weighted s
 
 ### Initialize termsearch
 
+Add the following line to your `~/.zshrc` file:
+
 ```bash
-termsearch init
+eval "$(termsearch init)"
 ```
 
-This command does the following:
-
-- Creates a `termsearch.zsh` file in the ZSH configuration directory.
-- Appends a command to the `~/.zshrc` file, which will load `termsearch.zsh` for a new terminal session.
-- Rebinds the **Ctrl+R** key (the default keybinding) in the ZSH shell to use `termsearch`.
-
-*Restart the terminal to enable it.*
+This rebinds **Ctrl+R** to use termsearch for searching your command history.
 
 ### Search for a command
 
@@ -54,7 +50,7 @@ cargo install termsearch
 ### From source
 
 ```bash
-cargo install --path . --locked
+cargo install --path .
 ```
 
 ## Uninstallation
