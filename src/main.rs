@@ -72,7 +72,6 @@ pub fn handle_search(
 ) -> Result<()> {
     // Read ZSH history
     let history = read_zsh_history(max_history)?;
-    debug!("Read {} history entries", history.len());
 
     // Initialize UI
     let mut ui = TerminalUi::new(max_results, history)?;

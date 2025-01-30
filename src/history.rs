@@ -33,17 +33,33 @@ pub fn read_zsh_history(num_lines: usize) -> Result<Vec<CommandEntry>> {
     let timestamp_regex = Regex::new(r"^: (\d+):\d+;(.*)$")?;
     let mut history = VecDeque::with_capacity(num_lines);
 
-    for line in reader.lines() {
-        let line = line?;
+    for (line_num, line) in reader.lines().enumerate() {
+        let line = match line {
+            Ok(line) => line,
+            Err(e) => {
+                debug!("Failed to read line {}: {}", line_num + 1, e);
+                continue;
+            }
+        };
+
         if let Some(caps) = timestamp_regex.captures(&line) {
             if let (Some(timestamp_str), Some(command)) = (caps.get(1), caps.get(2)) {
-                let timestamp = timestamp_str.as_str().parse::<i64>()?;
+                let timestamp = match timestamp_str.as_str().parse::<i64>() {
+                    Ok(timestamp) => timestamp,
+                    Err(e) => {
+                        debug!("Failed to parse timestamp on line {}: {}", line_num + 1, e);
+                        continue;
+                    }
+                };
 
                 // Convert Unix timestamp to DateTime<Utc>
-                let timestamp = Utc
-                    .timestamp_opt(timestamp, 0)
-                    .single()
-                    .context("Invalid timestamp")?;
+                let timestamp = match Utc.timestamp_opt(timestamp, 0).single() {
+                    Some(timestamp) => timestamp,
+                    None => {
+                        debug!("Invalid timestamp on line {}", line_num + 1);
+                        continue;
+                    }
+                };
 
                 let command = command.as_str().trim_end().to_string();
 
@@ -54,9 +70,12 @@ pub fn read_zsh_history(num_lines: usize) -> Result<Vec<CommandEntry>> {
                     history.push_back(CommandEntry { command, timestamp });
                 }
             }
+        } else {
+            debug!("Line {} does not match expected format", line_num + 1);
         }
     }
 
+    debug!("Read {} history entries", history.len());
     Ok(history.into())
 }
 
